@@ -1,0 +1,148 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer 
+} from 'recharts';
+import { 
+  AlertCircle, 
+  CheckCircle, 
+  TrendingUp, 
+  ShoppingCart 
+} from 'lucide-react';
+
+const InventoryDashboard = () => {
+  const [inventoryData, setInventoryData] = useState([
+    {
+      name: 'Product A',
+      currentStock: 500,
+      reorderPoint: 200,
+      forecastedDemand: 350,
+      status: 'Normal'
+    },
+    {
+      name: 'Product B',
+      currentStock: 100,
+      reorderPoint: 250,
+      forecastedDemand: 300,
+      status: 'Low Stock'
+    },
+    {
+      name: 'Product C',
+      currentStock: 750,
+      reorderPoint: 300,
+      forecastedDemand: 400,
+      status: 'Normal'
+    }
+  ]);
+
+  const [demandTrend, setDemandTrend] = useState([
+    { month: 'Jan', demand: 2500 },
+    { month: 'Feb', demand: 2800 },
+    { month: 'Mar', demand: 3200 },
+    { month: 'Apr', demand: 3500 },
+    { month: 'May', demand: 3800 }
+  ]);
+
+  return (
+    <div className="p-6 space-y-6 bg-white">
+      <h1 className="text-2xl font-bold mb-4">Automated Reordering Dashboard</h1>
+      
+      <div className="grid grid-cols-4 gap-4">
+        <div className="border rounded-lg p-4 shadow-sm">
+          <div className="flex flex-row items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-600">Total Products</span>
+            <ShoppingCart className="h-4 w-4 text-gray-400" />
+          </div>
+          <div className="text-2xl font-bold">{inventoryData.length}</div>
+        </div>
+        
+        <div className="border rounded-lg p-4 shadow-sm">
+          <div className="flex flex-row items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-600">Low Stock Alerts</span>
+            <AlertCircle className="h-4 w-4 text-red-500" />
+          </div>
+          <div className="text-2xl font-bold text-red-600">
+            {inventoryData.filter(item => item.status === 'Low Stock').length}
+          </div>
+        </div>
+        
+        <div className="border rounded-lg p-4 shadow-sm">
+          <div className="flex flex-row items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-600">Forecasted Demand</span>
+            <TrendingUp className="h-4 w-4 text-gray-400" />
+          </div>
+          <div className="text-2xl font-bold">
+            {demandTrend[demandTrend.length - 1].demand}
+          </div>
+        </div>
+        
+        <div className="border rounded-lg p-4 shadow-sm">
+          <div className="flex flex-row items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-600">System Status</span>
+            <CheckCircle className="h-4 w-4 text-green-500" />
+          </div>
+          <div className="text-2xl font-bold text-green-600">Operational</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-6">
+        <div className="border rounded-lg p-4 shadow-sm">
+          <h2 className="text-lg font-semibold mb-4">Inventory Levels</h2>
+          <table className="w-full">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left p-2">Product</th>
+                <th className="text-left p-2">Current Stock</th>
+                <th className="text-left p-2">Reorder Point</th>
+                <th className="text-left p-2">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {inventoryData.map((product) => (
+                <tr key={product.name} className="border-b">
+                  <td className="p-2">{product.name}</td>
+                  <td className="p-2">{product.currentStock}</td>
+                  <td className="p-2">{product.reorderPoint}</td>
+                  <td className="p-2">
+                    <span className={
+                      product.status === 'Low Stock' 
+                        ? 'text-red-500' 
+                        : 'text-green-500'
+                    }>
+                      {product.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="border rounded-lg p-4 shadow-sm">
+          <h2 className="text-lg font-semibold mb-4">Demand Forecast Trend</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={demandTrend}>
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line 
+                type="monotone" 
+                dataKey="demand" 
+                stroke="#8884d8" 
+                strokeWidth={2}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default InventoryDashboard;
