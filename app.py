@@ -1,14 +1,22 @@
 from flask import Flask, render_template, request, jsonify
-from inventory_management import InventoryManager
+from anthropic import Anthropic
+import os
 
+# Anthropic API setup
+# Option 1: Set API key as environment variable
+os.environ['ANTHROPIC_API_KEY'] = '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'
+
+# Option 2: Pass API key directly when creating client (less secure)
+anthropic = Anthropic(api_key='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')
+
+# Flask app setup
 app = Flask(__name__)
-config = {
-    'data_source': 'erp_system',
-    'safety_stock_multiplier': 1.5
-}
 
-# Instantiate the InventoryManager with the config
-inventory = InventoryManager(config)
+# Example configuration for inventory management
+inventory = [
+    {"id": 1, "name": "Widget A", "current_stock": 50, "min_stock": 10, "reorder_point": 20, "supplier": "Supplier X"},
+    {"id": 2, "name": "Widget B", "current_stock": 30, "min_stock": 5, "reorder_point": 10, "supplier": "Supplier Y"}
+]
 
 @app.route('/')
 def home():
@@ -17,45 +25,56 @@ def home():
 
 @app.route('/get_inventory', methods=['GET'])
 def get_inventory():
-    """Get all inventory items."""
-    items = []
-    with inventory.db_path as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM products")
-        items = cursor.fetchall()
-    return jsonify(items)
+    try:
+        return jsonify({"products": inventory}), 200
+    except Exception as e:
+        print(f"Error fetching inventory: {e}")
+        return jsonify({"error": "Internal Server Error"}), 500
 
 @app.route('/add_product', methods=['POST'])
 def add_product():
-    """Add a new product to the inventory."""
-    data = request.json
     try:
-        inventory.add_product(
-            data['name'], 
-            data['current_stock'], 
-            data['min_stock'], 
-            data['reorder_point'], 
-            data['supplier']
+        product = request.json
+        if not all(k in product for k in ('name', 'current_stock', 'min_stock', 'reorder_point', 'supplier')):
+            return jsonify({"error": "Invalid product data"}), 400
+        
+        new_product = {
+            "id": len(inventory) + 1,
+            **product
+        }
+        inventory.append(new_product)
+        return jsonify({"message": "Product added successfully"}), 201
+    except Exception as e:
+        print(f"Error adding product: {e}")
+        return jsonify({"error": "Internal Server Error"}), 500
+
+@app.route('/ask_claude', methods=['POST'])
+def ask_claude():
+    """
+    Endpoint to interact with Claude using the Anthropic API.
+    """
+    data = request.json
+    user_message = data.get('message', '')
+
+    if not user_message:
+        return jsonify({"error": "Message content is required"}), 400
+
+    try:
+        # Make a request to Claude via Anthropic API
+        response = anthropic.completions.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=1024,
+            messages=[
+                {
+                    "role": "user",
+                    "content": user_message
+                }
+            ]
         )
-        return jsonify({'message': 'Product added successfully'}), 201
+        return jsonify({"response": response['completion']}), 200
     except Exception as e:
-        return jsonify({'error': str(e)}), 400
-
-@app.route('/check_reorder', methods=['GET'])
-def check_reorder():
-    """Check for products that need reordering."""
-    reorder_needs = inventory.check_reorder_needs()
-    return jsonify(reorder_needs)
-
-@app.route('/simulate_reorder', methods=['POST'])
-def simulate_reorder():
-    """Simulate a reorder for a product."""
-    data = request.json
-    try:
-        inventory.place_reorder(data['product_id'], data.get('quantity', 20))
-        return jsonify({'message': 'Reorder simulated successfully'}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        print(f"Error interacting with Claude: {e}")
+        return jsonify({"error": "Failed to process the request"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

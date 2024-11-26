@@ -53,23 +53,26 @@
             $.get('/get_inventory', function (data) {
                 const tableBody = $('#inventory-table tbody');
                 tableBody.empty();
-                data.forEach(item => {
+                data.products.forEach(item => {
                     tableBody.append(`
                         <tr>
-                            <td class="border p-2">${item[1]}</td>
-                            <td class="border p-2">${item[2]}</td>
-                            <td class="border p-2">${item[3]}</td>
-                            <td class="border p-2">${item[4]}</td>
-                            <td class="border p-2">${item[5]}</td>
+                            <td class="border p-2">${item.name}</td>
+                            <td class="border p-2">${item.current_stock}</td>
+                            <td class="border p-2">${item.min_stock}</td>
+                            <td class="border p-2">${item.reorder_point}</td>
+                            <td class="border p-2">${item.supplier}</td>
                             <td class="border p-2">
                                 <button class="bg-red-500 text-white px-3 py-1 rounded" 
-                                    onclick="simulateReorder(${item[0]})">Reorder</button>
+                                    onclick="simulateReorder(${item.id})">Reorder</button>
                             </td>
                         </tr>
                     `);
                 });
+            }).fail(function (xhr, status, error) {
+                console.error('Error fetching inventory:', xhr.responseText);
             });
         }
+
 
         // Add product form submission
         $('#add-product-form').submit(function (e) {
@@ -81,14 +84,34 @@
                 reorder_point: parseInt($('#reorder-point').val()),
                 supplier: $('#supplier').val(),
             };
-            $.post('/add_product', JSON.stringify(data), function () {
-                fetchInventory();
+            $.ajax({
+                url: '/add_product',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function () {
+                    fetchInventory(); // Refresh the table
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error adding product:', xhr.responseText);
+                }
             });
         });
 
+
         function simulateReorder(productId) {
-            $.post('/simulate_reorder', JSON.stringify({ product_id: productId }), function () {
-                fetchInventory();
+            $.ajax({
+                url: '/simulate_reorder',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ product_id: productId }),
+                success: function () {
+                    fetchInventory();
+                    alert("Reorder simulated successfully!");
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error simulating reorder:", error);
+                }
             });
         }
     </script>
