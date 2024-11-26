@@ -1,0 +1,154 @@
+import React, { useState } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  ReferenceLine,
+  ReferenceArea
+} from 'recharts';
+
+const InventoryChart = () => {
+  // Process and transform the data
+  const [data] = useState(() => {
+    // Convert raw CSV data into structured format
+    const processedData = [
+      {"date": "2024-11-26", "stock": 394848, "safetyStock": -1184544, "planned": 789696, "event": "Stock on hold"},
+      {"date": "2024-11-27", "stock": 0, "safetyStock": -1184544, "planned": 394848},
+      {"date": "2024-12-04", "stock": 921312, "safetyStock": -1184544, "planned": 1184544, "event": "Large PO received"},
+      {"date": "2024-12-11", "stock": 1623264, "safetyStock": -1184544, "planned": 1184544},
+      {"date": "2024-12-18", "stock": 1941336, "safetyStock": -1184544, "planned": 789696, "event": "Peak inventory"},
+      {"date": "2024-12-25", "stock": 1500000, "safetyStock": -1184544, "planned": 0, "event": "Year-end adjustment"},
+      {"date": "2025-01-01", "stock": 1200000, "safetyStock": -1184544, "planned": 500000},
+      {"date": "2025-01-08", "stock": 900000, "safetyStock": -1184544, "planned": 750000},
+      {"date": "2025-01-15", "stock": 600000, "safetyStock": -1184544, "planned": 1000000, "event": "Low stock alert"}
+    ].map(item => ({
+      ...item,
+      formattedDate: new Date(item.date).toLocaleDateString(),
+    }));
+    return processedData;
+  });
+
+  // Custom tooltip component
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-4 border rounded shadow-lg">
+          <p className="font-bold">{label}</p>
+          {payload.map((entry, index) => (
+            <p key={index} style={{ color: entry.color }}>
+              {entry.name}: {entry.value.toLocaleString()}
+            </p>
+          ))}
+          {payload[0].payload.event && (
+            <p className="text-gray-600 mt-2">
+              Event: {payload[0].payload.event}
+            </p>
+          )}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Inventory Levels Over Time</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[600px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={data}
+              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="formattedDate"
+                tick={{ fill: '#666' }}
+                label={{ value: 'Date', position: 'bottom', offset: 0 }}
+              />
+              <YAxis 
+                tick={{ fill: '#666' }}
+                label={{ value: 'Quantity', angle: -90, position: 'insideLeft' }}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend 
+                verticalAlign="top" 
+                height={36}
+              />
+              
+              {/* Current stock level line */}
+              <Line
+                type="monotone"
+                dataKey="stock"
+                name="Current Stock"
+                stroke="#2563eb"
+                strokeWidth={2}
+                dot={{ r: 4 }}
+                activeDot={{ r: 8 }}
+              />
+              
+              {/* Safety stock level line */}
+              <Line
+                type="monotone"
+                dataKey="safetyStock"
+                name="Safety Stock"
+                stroke="#dc2626"
+                strokeWidth={2}
+                strokeDasharray="5 5"
+              />
+              
+              {/* Planned orders line */}
+              <Line
+                type="monotone"
+                dataKey="planned"
+                name="Planned Orders"
+                stroke="#16a34a"
+                strokeWidth={2}
+              />
+
+              {/* Reference lines for significant events */}
+              {data.map((item, index) => item.event && (
+                <ReferenceLine
+                  key={index}
+                  x={item.formattedDate}
+                  stroke="#6b7280"
+                  strokeDasharray="3 3"
+                  label={{
+                    value: item.event,
+                    position: 'top',
+                    fill: '#6b7280',
+                    fontSize: 12
+                  }}
+                />
+              ))}
+
+              {/* Highlight critical areas */}
+              <ReferenceArea
+                y1={-1184544}
+                y2={0}
+                fill="#fee2e2"
+                fillOpacity={0.3}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="mt-4 text-sm text-gray-600">
+          <p>• Hover over data points to see detailed information</p>
+          <p>• Red shaded area indicates below safety stock level</p>
+          <p>• Vertical lines indicate significant events</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default InventoryChart;
