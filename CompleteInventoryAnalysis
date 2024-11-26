@@ -1,0 +1,65 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Process the full dataset
+df = pd.read_csv('4999122.csv', thousands=',')
+df['Planned dates'] = pd.to_datetime(df['Planned dates'])
+
+# Convert quantity columns to numeric, removing any commas
+df['Rec./reqd qty'] = pd.to_numeric(df['Rec./reqd qty'].str.replace(',', ''), errors='coerce')
+df['Avail. Quantity'] = pd.to_numeric(df['Avail. Quantity'].str.replace(',', ''), errors='coerce')
+
+# Create multiple visualizations
+plt.style.use('seaborn')
+fig = plt.figure(figsize=(20, 15))
+
+# 1. Inventory Level Trend
+ax1 = plt.subplot(2, 2, 1)
+df.plot(x='Planned dates', y='Avail. Quantity', ax=ax1)
+ax1.set_title('Inventory Level Over Time')
+ax1.set_xlabel('Date')
+ax1.set_ylabel('Available Quantity')
+ax1.grid(True)
+
+# 2. Movement Types Distribution
+ax2 = plt.subplot(2, 2, 2)
+df['MRP element'].value_counts().plot(kind='bar', ax=ax2)
+ax2.set_title('Distribution of Movement Types')
+ax2.set_xlabel('Movement Type')
+ax2.set_ylabel('Count')
+plt.xticks(rotation=45)
+
+# 3. Storage Location Analysis
+ax3 = plt.subplot(2, 2, 3)
+location_transfers = df[df['MRP element'] == 'Transf'].groupby('Stor. Loc.')['Rec./reqd qty'].sum()
+location_transfers.plot(kind='bar', ax=ax3)
+ax3.set_title('Transfer Quantities by Location')
+ax3.set_xlabel('Storage Location')
+ax3.set_ylabel('Total Transfer Quantity')
+plt.xticks(rotation=45)
+
+# 4. Weekly Patterns
+ax4 = plt.subplot(2, 2, 4)
+df['Week'] = df['Planned dates'].dt.isocalendar().week
+weekly_transfers = df[df['MRP element'] == 'Transf'].groupby('Week')['Rec./reqd qty'].sum()
+weekly_transfers.plot(kind='line', marker='o', ax=ax4)
+ax4.set_title('Weekly Transfer Patterns')
+ax4.set_xlabel('Week Number')
+ax4.set_ylabel('Transfer Quantity')
+ax4.grid(True)
+
+plt.tight_layout()
+
+# Print analysis summary
+print("\nInventory Analysis Summary:")
+print("-" * 50)
+print(f"Date Range: {df['Planned dates'].min().date()} to {df['Planned dates'].max().date()}")
+print(f"\nMovement Type Distribution:")
+print(df['MRP element'].value_counts())
+print(f"\nStorage Location Activity:")
+print(df.groupby('Stor. Loc.')['Rec./reqd qty'].agg(['count', 'sum', 'mean']).round(2))
+print(f"\nInventory Metrics:")
+print(f"Average Available Quantity: {df['Avail. Quantity'].mean():,.2f}")
+print(f"Maximum Available Quantity: {df['Avail. Quantity'].max():,.2f}")
+print(f"Minimum Available Quantity: {df['Avail. Quantity'].min():,.2f}")
