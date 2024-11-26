@@ -1,0 +1,162 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from datetime import datetime
+
+# Read and prepare the data
+def prepare_data(df):
+    # Convert date strings to datetime
+    df['Planned dates'] = pd.to_datetime(df['Planned dates'])
+    
+    # Convert quantity columns to numeric
+    df['Rec./reqd qty'] = pd.to_numeric(df['Rec./reqd qty'])
+    df['Avail. Quantity'] = pd.to_numeric(df['Avail. Quantity'])
+    
+    return df
+
+def analyze_inventory(df):
+    # Create figures for multiple plots
+    plt.style.use('seaborn')
+    fig = plt.figure(figsize=(20, 15))
+    
+    # 1. Inventory Level Over Time
+    ax1 = plt.subplot(2, 2, 1)
+    df.plot(x='Planned dates', y='Avail. Quantity', ax=ax1)
+    ax1.set_title('Inventory Level Over Time')
+    ax1.set_xlabel('Date')
+    ax1.set_ylabel('Available Quantity')
+    ax1.grid(True)
+    
+    # 2. Movement Types Distribution
+    ax2 = plt.subplot(2, 2, 2)
+    movement_counts = df['MRP element'].value_counts()
+    movement_counts.plot(kind='bar', ax=ax2)
+    ax2.set_title('Distribution of Movement Types')
+    ax2.set_xlabel('Movement Type')
+    ax2.set_ylabel('Count')
+    plt.xticks(rotation=45)
+    
+    # 3. Location-wise Transfer Analysis
+    ax3 = plt.subplot(2, 2, 3)
+    location_transfers = df[df['MRP element'] == 'Transf'].groupby('Stor. Loc.')['Rec./reqd qty'].sum()
+    location_transfers.plot(kind='bar', ax=ax3)
+    ax3.set_title('Transfer Quantities by Location')
+    ax3.set_xlabel('Storage Location')
+    ax3.set_ylabel('Total Transfer Quantity')
+    plt.xticks(rotation=45)
+    
+    # 4. Weekly Transfer Patterns
+    ax4 = plt.subplot(2, 2, 4)
+    df['Week'] = df['Planned dates'].dt.isocalendar().week
+    weekly_transfers = df[df['MRP element'] == 'Transf'].groupby('Week')['Rec./reqd qty'].sum()
+    weekly_transfers.plot(kind='line', marker='o', ax=ax4)
+    ax4.set_title('Weekly Transfer Patterns')
+    ax4.set_xlabel('Week Number')
+    ax4.set_ylabel('Transfer Quantity')
+    ax4.grid(True)
+    
+    plt.tight_layout()
+    
+    # Additional Analysis
+    print("\nInventory Analysis Summary:")
+    print("-" * 50)
+    
+    # Calculate key metrics
+    total_pos = df[df['MRP element'] == 'PO']['Rec./reqd qty'].sum()
+    total_transfers = abs(df[df['MRP element'] == 'Transf']['Rec./reqd qty'].sum())
+    avg_po_size = df[df['MRP element'] == 'PO']['Rec./reqd qty'].mean()
+    
+    print(f"Total Purchase Orders Volume: {total_pos:,.2f}")
+    print(f"Total Transfer Volume: {total_transfers:,.2f}")
+    print(f"Average PO Size: {avg_po_size:,.2f}")
+    
+    # Location analysis
+    print("\nLocation-wise Transfer Analysis:")
+    location_summary = df[df['MRP element'] == 'Transf'].groupby('Stor. Loc.').agg({
+        'Rec./reqd qty': ['count', 'sum', 'mean']
+    })
+    print(location_summary)
+    
+    # Safety stock analysis
+    safety_stock_data = df[df['MRP element'] == 'SafeSt']
+    if not safety_stock_data.empty:
+        print("\nSafety Stock Analysis:")
+        print(f"Average Safety Stock Level: {safety_stock_data['Rec./reqd qty'].mean():,.2f}")
+    
+    return fig
+
+# Function to create weekly demand forecast
+def create_forecast(df):
+    # Create weekly demand aggregation
+    weekly_demand = df[df['MRP element'] == 'Transf'].groupby(
+        pd.Grouper(key='Planned dates', freq='W')
+    )['Rec./reqd qty'].sum().abs()
+    
+    # Plot the forecast
+    plt.figure(figsize=(15, 7))
+    weekly_demand.plot(kind='line', marker='o')
+    plt.title('Weekly Demand Pattern and Forecast')
+    plt.xlabel('Date')
+    plt.ylabel('Weekly Demand')
+    plt.grid(True)
+    
+    # Calculate moving averages for trend analysis
+    ma_4 = weekly_demand.rolling(window=4).mean()
+    ma_8 = weekly_demand.rolling(window=8).mean()
+    
+    ma_4.plot(label='4-week MA', linestyle='--')
+    ma_8.plot(label='8-week MA', linestyle=':')
+    
+    plt.legend()
+    
+    # Print forecast metrics
+    print("\nDemand Forecast Metrics:")
+    print("-" * 50)
+    print(f"Average Weekly Demand: {weekly_demand.mean():,.2f}")
+    print(f"Demand Std Deviation: {weekly_demand.std():,.2f}")
+    print(f"Peak Demand: {weekly_demand.max():,.2f}")
+    print(f"Minimum Demand: {weekly_demand.min():,.2f}")
+    
+    return plt.gcf()
+
+# Function to analyze supplier performance
+def analyze_supplier_performance(df):
+    po_data = df[df['MRP element'] == 'PO'].copy()
+    
+    # Calculate delivery performance
+    po_data['Delay'] = (pd.to_datetime(po_data['Planned dates']) - 
+                       pd.to_datetime(po_data['Rescheduling date'])).dt.days
+    
+    plt.figure(figsize=(15, 7))
+    
+    # Create supplier performance visualization
+    plt.subplot(1, 2, 1)
+    po_data['Delay'].hist(bins=20)
+    plt.title('Distribution of Delivery Delays')
+    plt.xlabel('Delay (Days)')
+    plt.ylabel('Frequency')
+    
+    # Order size analysis
+    plt.subplot(1, 2, 2)
+    po_data['Rec./reqd qty'].hist(bins=20)
+    plt.title('Distribution of Order Sizes')
+    plt.xlabel('Order Size')
+    plt.ylabel('Frequency')
+    
+    plt.tight_layout()
+    
+    # Print supplier performance metrics
+    print("\nSupplier Performance Metrics:")
+    print("-" * 50)
+    print(f"Average Delivery Delay: {po_data['Delay'].mean():.2f} days")
+    print(f"Maximum Delay: {po_data['Delay'].max():.2f} days")
+    print(f"On-time Delivery Rate: {(po_data['Delay'] <= 0).mean() * 100:.2f}%")
+    
+    return plt.gcf()
+
+# Example usage:
+# df = pd.read_csv('your_data.csv')
+# df = prepare_data(df)
+# inventory_fig = analyze_inventory(df)
+# forecast_fig = create_forecast(df)
+# supplier_fig = analyze_supplier_performance(df)
