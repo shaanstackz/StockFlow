@@ -1,0 +1,48 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from datetime import datetime
+
+# Read the data
+data = """
+,Planned dates,MRP element,MRP elmnt data,Rescheduling date,Exception,Rec./reqd qty,Avail. Quantity,Plng Plant,Stor. Loc.,Rec P. Qty,Day of the Week
+,11/26/2024,Stock,"On-Hold: 263,232.000 M",,82,0.000,"394,848",,,0,Tuesday
+,11/26/2024,SafeSt,Safety Stock,,,"-1,579,392","-1,184,544",,,1579.39-,Tuesday
+"""
+
+# Create DataFrame
+df = pd.read_csv(pd.StringIO(data))
+
+# Clean and prepare the data
+df['Planned dates'] = pd.to_datetime(df['Planned dates'])
+df['Rec./reqd qty'] = df['Rec./reqd qty'].str.replace(',', '').astype(float)
+df['Avail. Quantity'] = df['Avail. Quantity'].str.replace(',', '').astype(float)
+
+# Create visualizations
+plt.style.use('seaborn')
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(15, 10))
+
+# 1. Inventory Levels
+df.plot(x='Planned dates', y='Avail. Quantity', ax=ax1, marker='o')
+ax1.set_title('Available Inventory Over Time')
+ax1.set_xlabel('Date')
+ax1.set_ylabel('Available Quantity')
+ax1.grid(True)
+
+# 2. Required vs Available Quantity
+df.plot(kind='bar', y=['Rec./reqd qty', 'Avail. Quantity'], ax=ax2)
+ax2.set_title('Required vs Available Quantity')
+ax2.set_xlabel('Time Period')
+ax2.set_ylabel('Quantity')
+ax2.legend(['Required Quantity', 'Available Quantity'])
+
+plt.tight_layout()
+plt.show()
+
+# Print summary statistics
+print("\nInventory Analysis Summary:")
+print("-" * 50)
+print(f"Average Available Quantity: {df['Avail. Quantity'].mean():,.2f}")
+print(f"Maximum Available Quantity: {df['Avail. Quantity'].max():,.2f}")
+print(f"Minimum Available Quantity: {df['Avail. Quantity'].min():,.2f}")
+print(f"Total Required Quantity: {df['Rec./reqd qty'].sum():,.2f}")
