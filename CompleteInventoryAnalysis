@@ -1,17 +1,28 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+#print(plt.style.available)
 # Process the full dataset
 df = pd.read_csv('4999122.csv', thousands=',')
 df['Planned dates'] = pd.to_datetime(df['Planned dates'])
 
 # Convert quantity columns to numeric, removing any commas
-df['Rec./reqd qty'] = pd.to_numeric(df['Rec./reqd qty'].str.replace(',', ''), errors='coerce')
-df['Avail. Quantity'] = pd.to_numeric(df['Avail. Quantity'].str.replace(',', ''), errors='coerce')
+# Convert quantity columns to numeric, removing any commas
+if 'Rec./reqd qty' in df.columns:
+    df['Rec./reqd qty'] = df['Rec./reqd qty'].astype(str).str.replace(',', '', regex=False)
+    df['Rec./reqd qty'] = pd.to_numeric(df['Rec./reqd qty'], errors='coerce')
+else:
+    print("Column 'Rec./reqd qty' not found in DataFrame.")
+
+if 'Avail. Quantity' in df.columns:
+    df['Avail. Quantity'] = df['Avail. Quantity'].astype(str).str.replace(',', '', regex=False)
+    df['Avail. Quantity'] = pd.to_numeric(df['Avail. Quantity'], errors='coerce')
+else:
+    print("Column 'Avail. Quantity' not found in DataFrame.")
+
 
 # Create multiple visualizations
-plt.style.use('seaborn')
+plt.style.use('ggplot')
 fig = plt.figure(figsize=(20, 15))
 
 # 1. Inventory Level Trend

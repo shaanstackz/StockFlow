@@ -3,15 +3,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime
 
-# Read the data
-data = """
-,Planned dates,MRP element,MRP elmnt data,Rescheduling date,Exception,Rec./reqd qty,Avail. Quantity,Plng Plant,Stor. Loc.,Rec P. Qty,Day of the Week
-,11/26/2024,Stock,"On-Hold: 263,232.000 M",,82,0.000,"394,848",,,0,Tuesday
-,11/26/2024,SafeSt,Safety Stock,,,"-1,579,392","-1,184,544",,,1579.39-,Tuesday
-"""
-
-# Create DataFrame
-df = pd.read_csv(pd.StringIO(data))
+# Read the data from CSV file
+file_path = "4999122.csv"  # Replace with the full path to your CSV file if not in the same directory
+df = pd.read_csv(file_path)
 
 # Clean and prepare the data
 df['Planned dates'] = pd.to_datetime(df['Planned dates'])
@@ -19,7 +13,7 @@ df['Rec./reqd qty'] = df['Rec./reqd qty'].str.replace(',', '').astype(float)
 df['Avail. Quantity'] = df['Avail. Quantity'].str.replace(',', '').astype(float)
 
 # Create visualizations
-plt.style.use('seaborn')
+plt.style.use('ggplot')
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(15, 10))
 
 # 1. Inventory Levels
