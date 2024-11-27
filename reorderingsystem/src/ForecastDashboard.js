@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card.tsx";
+import { Alert, AlertTitle, AlertDescription } from "./components/ui/alert.tsx";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Bell, TrendingUp, Package, Truck } from 'lucide-react';
+import './global.css';
 
 const InventoryDashboard = () => {
   // Sample data structure based on the CSV
