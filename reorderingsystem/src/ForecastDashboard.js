@@ -3,27 +3,41 @@ import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card.t
 import { Alert, AlertTitle, AlertDescription } from "./components/ui/alert.tsx";
 import { Package, TrendingUp, Truck, Bell } from 'lucide-react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer, BarChart, Bar
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
 } from 'recharts';
  
 const InventoryDashboard = () => {
   const [summaryData, setSummaryData] = useState(null);
   const [chartData, setChartData] = useState([]);
   const [analysisData, setAnalysisData] = useState(null);
+  const [forecastData, setForecastData] = useState(null);
+  const [error, setError] = useState(null);
  
   useEffect(() => {
-    // Fetch data from backend
     const fetchData = async () => {
-      const [summary, chart, analysis] = await Promise.all([
-        fetch('http://localhost:8000/api/inventory/summary').then(res => res.json()),
-        fetch('http://localhost:8000/api/inventory/chart-data').then(res => res.json()),
-        fetch('http://localhost:8000/api/inventory/analysis').then(res => res.json())
-      ]);
+      try {
+        const [summary, chart, analysis, forecast] = await Promise.all([
+          fetch('http://localhost:8000/api/inventory/summary').then(res => res.json()),
+          fetch('http://localhost:8000/api/inventory/chart-data').then(res => res.json()),
+          fetch('http://localhost:8000/api/inventory/analysis').then(res => res.json()),
+          fetch('http://localhost:8000/api/inventory/forecast').then(res => res.json())
+        ]);
  
-      setSummaryData(summary);
-      setChartData(chart);
-      setAnalysisData(analysis);
+        setSummaryData(summary);
+        setChartData(chart);
+        setAnalysisData(analysis);
+        setForecastData(forecast);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setError('Failed to fetch data. Please try again later.');
+      }
     };
  
     fetchData();
@@ -38,7 +52,7 @@ const InventoryDashboard = () => {
     },
     {
       title: "Forecast Accuracy",
-      value: `${summaryData.forecastAccuracy}%`,
+      value: `${summaryData.forecastAccuracy.toFixed(1)}%`,
       trend: "+1.2%",
       Icon: TrendingUp
     },
@@ -55,6 +69,20 @@ const InventoryDashboard = () => {
       Icon: Bell
     }
   ] : [];
+ 
+  const formatTooltip = (value) => {
+    if (value == null) return 'N/A';
+    return `${value.toLocaleString()} K units`;
+  };
+ 
+  if (error) {
+    return (
+<Alert variant="destructive" className="m-6">
+<AlertTitle>Error</AlertTitle>
+<AlertDescription>{error}</AlertDescription>
+</Alert>
+    );
+  }
  
   return (
 <div className="p-6 space-y-6">
@@ -78,74 +106,79 @@ const InventoryDashboard = () => {
         ))}
 </div>
  
-      {/* Main Charts */}
+      {/* Charts */}
 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Inventory Levels Chart */}
 <Card>
 <CardHeader>
 <CardTitle>Inventory Levels</CardTitle>
 </CardHeader>
 <CardContent>
-<div className="h-[400px]">
+<div style={{ width: '100%', height: '400px' }}>
 <ResponsiveContainer>
 <LineChart data={chartData}>
 <CartesianGrid strokeDasharray="3 3" />
-<XAxis dataKey="Planned dates" />
+<XAxis dataKey="date" />
 <YAxis />
 <Tooltip />
 <Legend />
-<Line type="monotone" dataKey="Avail. Quantity" name="Available" stroke="#2563eb" />
-<Line type="monotone" dataKey="Rec./reqd qty" name="Required" stroke="#16a34a" />
+<Line type="monotone" dataKey="stock" name="Available" stroke="#2563eb" />
+<Line type="monotone" dataKey="planned" name="Required" stroke="#16a34a" />
 </LineChart>
 </ResponsiveContainer>
 </div>
 </CardContent>
 </Card>
  
-        <Card>
-<CardHeader>
-<CardTitle>Location Analysis</CardTitle>
-</CardHeader>
-<CardContent>
-<div className="h-[400px]">
-<ResponsiveContainer>
-<BarChart data={Object.entries(analysisData?.locationAnalysis || {}).map(([loc, data]) => ({
-                  location: loc,
-                  quantity: data['Rec./reqd qty']['sum']
-                }))}>
-<CartesianGrid strokeDasharray="3 3" />
-<XAxis dataKey="location" />
-<YAxis />
-<Tooltip />
-<Legend />
-<Bar dataKey="quantity" fill="#2563eb" />
-</BarChart>
-</ResponsiveContainer>
-</div>
-</CardContent>
-</Card>
-</div>
- 
-      {/* Analysis Section */}
-<div className="grid grid-cols-1 gap-4">
+        {/* Forecast Chart */}
 <Card>
 <CardHeader>
-<CardTitle>Inventory Analysis Summary</CardTitle>
+<CardTitle>Sales Forecast</CardTitle>
 </CardHeader>
 <CardContent>
-<div className="space-y-4">
-              {analysisData?.movementAnalysis && (
-<div>
-<h3 className="font-semibold mb-2">Movement Type Distribution</h3>
-<div className="grid grid-cols-2 gap-4">
-                    {Object.entries(analysisData.movementAnalysis).map(([type, count]) => (
-<div key={type} className="flex justify-between">
-<span>{type}</span>
-<span className="font-semibold">{count}</span>
-</div>
-                    ))}
-</div>
-</div>
-              )}
+<div style={{ width: '100%', height: '400px' }}>
+<ResponsiveContainer>
+<LineChart
+                  data={forecastData?.biweeklySales || []}
+                  margin={{
+                    top: 20,
+                    right: 30,
+                    left: 20,
+                    bottom: 70
+                  }}
+>
+<CartesianGrid strokeDasharray="3 3" />
+<XAxis
+                    dataKey="date"
+                    angle={-45}
+                    textAnchor="end"
+                    height={70}
+                    interval={2}
+                  />
+<YAxis />
+<Tooltip formatter={(value) => value ? `${value.toLocaleString()} units` : 'N/A'} />
+<Legend />
+<Line
+                    type="monotone"
+                    dataKey="actualSales"
+                    name="Actual Sales"
+                    stroke="#2563eb"
+                    strokeWidth={2}
+                    dot={false}
+                    connectNulls
+                  />
+<Line
+                    type="monotone"
+                    dataKey="predictedSales"
+                    name="Predicted Sales"
+                    stroke="#dc2626"
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    dot={false}
+                    connectNulls
+                  />
+</LineChart>
+</ResponsiveContainer>
 </div>
 </CardContent>
 </Card>
