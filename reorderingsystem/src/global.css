@@ -1,69 +1,162 @@
 /* Import Tailwind Base Styles */
 @tailwind base;
-
-/* Import Tailwind Component Styles */
 @tailwind components;
-
-/* Import Tailwind Utility Classes */
 @tailwind utilities;
 
-/* Extend the Base Layer with Custom Variables */
 @layer base {
   :root {
-    /* Global Color Variables */
-    --background: 0 0% 100%; /* White */
-    --foreground: 222.2 84% 4.9%; /* Dark color */
-    --card: 0 0% 100%; /* White */
-    --card-foreground: 222.2 84% 4.9%; /* Dark color */
-    --border: 214.3 31.8% 91.4%; /* Light gray border */
-  }
-
-  /* Apply Custom Variables */
-  body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
-    font-family: 'Inter', sans-serif; /* Example font */
-    margin: 0;
-    padding: 0;
-    line-height: 1.5;
-  }
-
-  .card {
-    background-color: hsl(var(--card));
-    color: hsl(var(--card-foreground));
-    border: 1px solid hsl(var(--border));
-    border-radius: 8px; /* Optional styling */
-    padding: 1rem; /* Example padding */
-  }
-
-  /* Example Custom Utility Overrides */
-  h1, h2, h3, h4, h5, h6 {
-    color: hsl(var(--foreground));
-    font-weight: bold;
-    margin: 0.5rem 0;
-  }
-
-  a {
-    color: hsl(var(--foreground));
-    text-decoration: none;
-  }
-
-  a:hover {
-    text-decoration: underline;
+    --background: 210 40% 98%; /* Light blue-gray background */
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --border: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    
+    /* New theme colors */
+    --primary: 221 83% 53%;    /* Blue */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222 47% 11%;
+    
+    /* Status colors */
+    --success: 142 76% 36%;    /* Green */
+    --warning: 38 92% 50%;     /* Orange */
+    --danger: 0 84% 60%;       /* Red */
+    --info: 199 89% 48%;       /* Blue */
   }
 }
 
-/* Example Tailwind Utility Customizations */
-@layer utilities {
-  .btn {
-    @apply px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600;
+@layer components {
+  .dashboard-container {
+    @apply max-w-[1600px] mx-auto p-6 space-y-6;
+  }
+
+  .dashboard-grid {
+    @apply grid gap-6;
+  }
+
+  .metrics-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6;
+  }
+
+  .charts-grid {
+    @apply grid grid-cols-1 lg:grid-cols-2 gap-6;
+  }
+
+  /* Enhanced table styles */
+  .inventory-table {
+    @apply w-full border-collapse;
+  }
+
+  .inventory-table th {
+    @apply bg-secondary px-4 py-3 text-left font-medium text-secondary-foreground text-sm tracking-wide;
+  }
+
+  .inventory-table td {
+    @apply px-4 py-3 border-b border-secondary;
+  }
+
+  .inventory-table tr:hover {
+    @apply bg-secondary/50 transition-colors;
+  }
+
+  /* Card enhancements */
+  .metric-card {
+    @apply bg-white rounded-xl shadow-sm border border-secondary p-6 transition-all hover:shadow-md;
+  }
+
+  /* Chart container */
+  .chart-container {
+    @apply h-[400px] w-full p-4;
+  }
+
+  /* Status badges */
+  .status-badge {
+    @apply px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .status-badge-success {
+    @apply bg-green-100 text-green-800;
+  }
+
+  .status-badge-warning {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+
+  .status-badge-danger {
+    @apply bg-red-100 text-red-800;
+  }
+
+  /* Form controls */
+  .form-input {
+    @apply w-full rounded-md border border-secondary px-3 py-2 text-sm
+           focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
+  }
+
+  .form-select {
+    @apply w-full rounded-md border border-secondary px-3 py-2 text-sm
+           focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md
+           font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary
+           focus:ring-offset-2 disabled:opacity-50;
   }
 
   .btn-secondary {
-    @apply px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600;
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-2 rounded-md
+           font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-secondary
+           focus:ring-offset-2 disabled:opacity-50;
   }
 
-  .alert {
-    @apply bg-red-100 border-l-4 border-red-500 text-red-700 p-4;
+  /* Upload area */
+  .upload-container {
+    @apply mb-6;
+  }
+
+  .upload-area {
+    @apply border-2 border-dashed border-secondary rounded-lg p-8 text-center
+           hover:border-primary/50 transition-colors cursor-pointer;
+  }
+
+  /* Icons */
+  .icon-container {
+    @apply p-2 rounded-full;
+  }
+
+  .icon-success {
+    @apply bg-green-100 text-green-600;
+  }
+
+  .icon-warning {
+    @apply bg-yellow-100 text-yellow-600;
+  }
+
+  .icon-danger {
+    @apply bg-red-100 text-red-600;
+  }
+}
+
+/* Custom scrollbar */
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-secondary;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-primary/50 rounded-full hover:bg-primary/70;
   }
 }
