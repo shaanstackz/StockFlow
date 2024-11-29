@@ -1,12 +1,69 @@
+/* Import Tailwind Base Styles */
 @tailwind base;
+
+/* Import Tailwind Component Styles */
 @tailwind components;
+
+/* Import Tailwind Utility Classes */
 @tailwind utilities;
+
+/* Extend the Base Layer with Custom Variables */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --border: 214.3 31.8% 91.4%;
+    /* Global Color Variables */
+    --background: 0 0% 100%; /* White */
+    --foreground: 222.2 84% 4.9%; /* Dark color */
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 222.2 84% 4.9%; /* Dark color */
+    --border: 214.3 31.8% 91.4%; /* Light gray border */
+  }
+
+  /* Apply Custom Variables */
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Inter', sans-serif; /* Example font */
+    margin: 0;
+    padding: 0;
+    line-height: 1.5;
+  }
+
+  .card {
+    background-color: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px; /* Optional styling */
+    padding: 1rem; /* Example padding */
+  }
+
+  /* Example Custom Utility Overrides */
+  h1, h2, h3, h4, h5, h6 {
+    color: hsl(var(--foreground));
+    font-weight: bold;
+    margin: 0.5rem 0;
+  }
+
+  a {
+    color: hsl(var(--foreground));
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+}
+
+/* Example Tailwind Utility Customizations */
+@layer utilities {
+  .btn {
+    @apply px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600;
+  }
+
+  .alert {
+    @apply bg-red-100 border-l-4 border-red-500 text-red-700 p-4;
   }
 }

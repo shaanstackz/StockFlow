@@ -1,6 +1,7 @@
 import React from 'react';
-import InventoryDashboard from './ForecastDashboard';
-import InventoryChart from './InteractiveInventoryChart';
+import InventoryDashboard from './ForecastDashboard.js';
+import InventoryChart from './InteractiveInventoryChart.js';
+
 
 function App() {
   return (

@@ -25,6 +25,7 @@ print(store_sales.isnull().sum())
  
 # Data Preprocessing
 # Drop unnecessary columns
+store_sales=store_sales[store_sales['MRP element']=='Transf']
 store_sales = store_sales.drop(columns=['MRP element','MRP elmnt data','Rescheduling date',
                                       'Exception','Plng Plant','Stor. Loc.','Rec P. Qty',
                                       'Day of the Week'],axis=1)
