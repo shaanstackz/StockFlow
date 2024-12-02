@@ -81,38 +81,40 @@ class Alert(BaseModel):
 @app.get("/api/inventory/check-alerts")
 async def check_alerts():
     try:
-        # Load and process data similar to your notification script
-        store_sales = pd.read_csv("4999122.csv")
+        # Load the CSV file
+        df = pd.read_csv("1111003.csv")
         
-        # Data Preprocessing
-        store_sales = store_sales.drop(columns=['MRP element','MRP elmnt data','Rescheduling date',
-                                            'Exception','Plng Plant','Stor. Loc.','Rec P. Qty',
-                                            'Day of the Week'], axis=1)
+        # Keep only required columns
+        df = df[['Order Qty', 'Posting Date']]
         
-        store_sales['Planned dates'] = pd.to_datetime(store_sales['Planned dates'])
-        store_sales['Rec./reqd qty'] = store_sales['Rec./reqd qty'].str.replace(',', '').astype(float)
-        store_sales['Avail. Quantity'] = store_sales['Avail. Quantity'].str.replace(',', '').astype(float)
+        # Convert date and numeric columns
+        df['Posting Date'] = pd.to_datetime(df['Posting Date'])
         
-        # Calculate projections
-        sample_date = datetime.now()
-        end_date = sample_date + timedelta(days=14)
-        filtered_data = store_sales[store_sales['Planned dates'] <= end_date]
-        
-        cumulative_available = filtered_data['Avail. Quantity'].sum()
-        cumulative_required = filtered_data['Rec./reqd qty'].sum()
-        
-        # Adjust sign of cumulative_required
-        if cumulative_required < 0:
-            cumulative_required = abs(cumulative_required)
+        # Handle Order Qty conversion without .str
+        # First check if it's already numeric
+        if df['Order Qty'].dtype == 'object':
+            # If it's string, remove commas and convert
+            df['Order Qty'] = df['Order Qty'].replace(',', '', regex=True).astype(float)
         else:
-            cumulative_required = -abs(cumulative_required)
+            # If it's already numeric, just ensure it's float
+            df['Order Qty'] = df['Order Qty'].astype(float)
+        
+        # Set sample date and calculate end date
+        sample_date = pd.to_datetime('2024-11-15')
+        end_date = sample_date + timedelta(days=14)
+        
+        # Filter data for the date range and positive order quantities
+        mask = (df['Posting Date'] <= end_date) & (df['Order Qty'] > 0)
+        filtered_data = df[mask]
+        
+        # Calculate total positive order quantities
+        total_required = filtered_data['Order Qty'].sum()
         
         alerts = []
         
-        # Check for shortages
-        if cumulative_required > cumulative_available:
-            difference = cumulative_required - cumulative_available
-            difference = difference/200  # Convert to kg as per your script
+        # Only create alert if there are positive order quantities
+        if total_required > 0:
+            difference = total_required/200  # Convert to kg
             
             alerts.append(Alert(
                 id=1,

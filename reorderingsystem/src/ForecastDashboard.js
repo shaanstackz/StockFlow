@@ -10,7 +10,8 @@ import {
   RefreshCcw, 
   AlertCircle,
   XCircle,
-  Plus
+  Plus,
+  GitGraph
 } from 'lucide-react';
 import { Button } from "./components/ui/button.tsx";
 import { Input } from "./components/ui/input.tsx";
@@ -57,7 +58,7 @@ const InventoryDashboard = () => {
   useEffect(() => {
     fetchAlerts();
     // Refresh alerts every 5 minutes
-    const interval = setInterval(fetchAlerts, 5 * 60 * 1000);
+    const interval = setInterval(fetchAlerts, 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -255,15 +256,39 @@ const InventoryDashboard = () => {
 
   return (
     <div className="dashboard-container">
-      {/* Test Button */}
-      <Button 
-        onClick={forceAddAlert}
-        className="mb-4"
-        variant="outline"
-      >
-        <Plus className="mr-2 h-4 w-4" />
-        Add Test Alert
-      </Button>
+      {/* Title Section */}
+      <Card className="mb-8 border-0 shadow-none bg-white overflow-hidden">
+        <CardContent className="p-8">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex items-center gap-6">
+              <div className="bg-blue-600 p-4 rounded-2xl rotate-3 transform hover:rotate-6 transition-transform duration-300">
+                <Package className="h-10 w-10 text-white" />
+              </div>
+              <div>
+                <h1 className="text-5xl md:text-6xl font-black tracking-tight text-gray-900 relative">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 transition-all duration-300">
+                    StockFlow
+                  </span>
+                  <div className="absolute -bottom-1 left-0 w-1/3 h-1 bg-blue-600 rounded-full"></div>
+                </h1>
+                <p className="text-gray-500 text-lg mt-2 font-medium ml-1">
+                  Intelligent Inventory Management
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-4 md:mt-0">
+              <Button 
+                onClick={forceAddAlert}
+                className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-0 shadow-sm hover:shadow transition-all duration-300"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Test Alert
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       {/* Alerts Section */}
       <div className="mb-6 space-y-4">
         {alerts.map((alert) => (
