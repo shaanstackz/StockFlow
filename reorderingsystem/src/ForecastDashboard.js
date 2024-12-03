@@ -182,6 +182,8 @@ const InventoryDashboard = () => {
         },
         body: JSON.stringify({
           ...newProduct,
+          currentStock: Number(newProduct.currentStock),
+          minStock: Number(newProduct.minStock),
           reorderPoint: Number(newProduct.reorderPoint)
         })
       });
@@ -191,6 +193,8 @@ const InventoryDashboard = () => {
       const newProductWithId = {
         id: products.length + 1, // Generate a local id if server doesn't provide one
         name: newProduct.name,
+        currentStock: Number(newProduct.currentStock),
+        minStock: Number(newProduct.minStock),
         reorderPoint: Number(newProduct.reorderPoint),
         supplier: newProduct.supplier
       };
@@ -200,6 +204,8 @@ const InventoryDashboard = () => {
       // Reset form
       setNewProduct({
         name: '',
+        currentStock: '',
+        minStock: '',
         reorderPoint: '',
         supplier: ''
       });
@@ -510,6 +516,7 @@ const InventoryDashboard = () => {
                   </thead>
                   <tbody>
                     {products.map((product) => {
+                      const stockStatus = getStockStatus(product.currentStock, product.minStock);
                       const isNearReorder = product.currentStock <= product.reorderPoint;
                       
                       return (
@@ -518,6 +525,15 @@ const InventoryDashboard = () => {
                             <div className="flex flex-col">
                               <span className="font-medium">{product.name}</span>
                               <span className="text-sm text-gray-500">ID: {product.id}</span>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            {getStockBadge(stockStatus)}
+                          </td>
+                          <td className="p-4">
+                            <div className="flex flex-col">
+                              <span className="font-medium">{product.currentStock}</span>
+                              <span className="text-sm text-gray-500">Min: {product.minStock}</span>
                             </div>
                           </td>
                           <td className="p-4">
