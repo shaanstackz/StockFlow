@@ -15,6 +15,8 @@ from sklearn.metrics import mean_squared_error
 import holidays
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.impute import SimpleImputer
+import requests
+import json
 
 app = FastAPI()
 
@@ -83,39 +85,28 @@ async def check_alerts():
     try:
         # Load the CSV file
         df = pd.read_csv("1111003.csv")
-        
         # Keep only required columns
         df = df[['Order Qty', 'Posting Date']]
-        
         # Convert date and numeric columns
         df['Posting Date'] = pd.to_datetime(df['Posting Date'])
-        
-        # Handle Order Qty conversion without .str
-        # First check if it's already numeric
+        # Handle Order Qty conversion
         if df['Order Qty'].dtype == 'object':
-            # If it's string, remove commas and convert
             df['Order Qty'] = df['Order Qty'].replace(',', '', regex=True).astype(float)
         else:
-            # If it's already numeric, just ensure it's float
             df['Order Qty'] = df['Order Qty'].astype(float)
-        
         # Set sample date and calculate end date
         sample_date = pd.to_datetime('2024-11-15')
         end_date = sample_date + timedelta(days=14)
-        
-        # Filter data for the date range and positive order quantities
+        # Filter data
         mask = (df['Posting Date'] <= end_date) & (df['Order Qty'] > 0)
         filtered_data = df[mask]
-        
-        # Calculate total positive order quantities
+        # Calculate total
         total_required = filtered_data['Order Qty'].sum()
-        
         alerts = []
-        
-        # Only create alert if there are positive order quantities
+        # If there's a shortage, create alert and send Teams notification
         if total_required > 0:
             difference = total_required/200  # Convert to kg
-            
+            # Create alert for frontend
             alerts.append(Alert(
                 id=1,
                 type="critical",
@@ -123,11 +114,48 @@ async def check_alerts():
                 description=f"Projected shortage of {difference:.2f} kg by {end_date.date()}",
                 timestamp=datetime.now()
             ))
-        
+            # Prepare Teams message
+            teams_message = (
+                f"🚨 Butter Breakdown Alert! 🚨\n"
+                f"We're about {difference:.2f} kg short of buttery bliss! 😱\n\n"
+                f"In just two weeks ({end_date.date()}), we'll be stuck spreading *regret* on our toast instead of butter 🧈. "
+                "The ovens are roaring (metaphorically—don't call the fire department 🔥), but our butter stash is toast! 😬\n\n"
+                "No butter means we'll be whipping up… *sandpaper croissants* 🥐, *cardboard cookies* 🍪, and *scones so dry "
+                "they double as hockey pucks*. 🏒 Not a good look for us.\n\n"
+                "Our production line might screech to a halt like someone stepping on a stick of butter barefoot. 🏭💥 "
+                "And the only thing worse than a butter-less bakery is… well, *nothing*. 😅\n\n"
+                "This message is brought to you by the urgent need for butter—because without it, we can't churn out the magic. 🧙‍♂️✨\n"
+                "Help us out before we become a butter-less bakery! 🧈😂"
+            )
+            # Send Teams notification
+            recipients = "example@example.com"  # Replace with actual recipients
+            send_teams_notification(recipients, teams_message)
         return {"alerts": [alert.dict() for alert in alerts]}
-        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+ 
+def send_teams_notification(recipients, message):
+    teams_link = "https://prod-165.westus.logic.azure.com:443/workflows/fcce9f80916c42cfa5a9cd2a1ea7d987/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=10goJEFWpK33j1flVpBezaGn0BzRcL-ozTXjhJoDKyM"
+    payload = {
+        "Recipients": recipients,
+        "Message": message
+    }
+    headers = {
+        "Content-Type": "application/json"
+    }
+    try:
+        response = requests.post(
+            teams_link, 
+            data=json.dumps(payload), 
+            headers=headers
+        )
+        if response.status_code == 200:
+            print("Teams notification sent successfully!")
+        else:
+            print(f"Failed to send Teams notification. Status: {response.status_code}")
+            print(response.text)
+    except Exception as e:
+        print(f"Error sending Teams notification: {str(e)}")
 def create_features(df):
     df = df.copy()
     
