@@ -57,9 +57,6 @@ const InventoryDashboard = () => {
 
   useEffect(() => {
     fetchAlerts();
-    // Refresh alerts every 5 minutes
-    const interval = setInterval(fetchAlerts, 1000);
-    return () => clearInterval(interval);
   }, []);
 
   const dismissAlert = (alertId) => {
@@ -276,47 +273,53 @@ const InventoryDashboard = () => {
                 </p>
               </div>
             </div>
-            
-            <div className="flex gap-3 mt-4 md:mt-0">
-              <Button 
-                onClick={forceAddAlert}
-                className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-0 shadow-sm hover:shadow transition-all duration-300"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Test Alert
-              </Button>
-            </div>
           </div>
         </CardContent>
       </Card>
       {/* Alerts Section */}
-      <div className="mb-6 space-y-4">
+      <div className="mb-6 space-y-4 max-w-md"> {/* Constrain width for notification look */}
         {alerts.map((alert) => (
           <Alert 
             key={alert.id} 
-            variant={alert.type === 'critical' ? 'destructive' : alert.type === 'warning' ? 'warning' : 'default'}
+            variant="default"
+            className="bg-white border rounded-lg shadow-lg p-4 flex items-start gap-3 hover:bg-gray-50 transition-colors"
           >
-            <div className="flex justify-between items-start">
-              <div>
-                <AlertTitle className="flex items-center gap-2">
-                  {alert.title}
-                </AlertTitle>
-                <AlertDescription className="mt-1">
-                  {alert.description}
-                </AlertDescription>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={() => dismissAlert(alert.id)}
-              >
-                <XCircle className="h-4 w-4" />
-              </Button>
+            {/* Icon/Logo Section */}
+            <div className="bg-blue-500 h-10 w-10 rounded flex items-center justify-center flex-shrink-0">
+              <Package className="h-6 w-6 text-white" />
+            </div>
+
+            {/* Content Section */}
+            <div className="flex-grow min-w-0">
+              <AlertTitle className="text-sm font-semibold text-gray-900 mb-0.5">
+                {alert.title}
+              </AlertTitle>
+              <AlertDescription className="text-sm text-gray-600">
+                {alert.description}
+              </AlertDescription>
+              <p className="text-xs text-gray-400 mt-1">stockflow.app</p>
             </div>
           </Alert>
         ))}
       </div>
+
+      {/* Add animation styles */}
+      <style jsx global>{`
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateX(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        .alert {
+          animation: slideIn 0.3s ease-out forwards;
+        }
+      `}</style>
       <Card>
           <CardHeader>
             <CardTitle>Actual vs Predicted Order Quantities for 2024</CardTitle>
