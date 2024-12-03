@@ -27,6 +27,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import './InventoryDashboard.css';
+import Invoice from './Invoice';
 const InventoryDashboard = () => {
   const [summaryData, setSummaryData] = useState(null);
   const [chartData, setChartData] = useState([]);
@@ -320,6 +321,8 @@ const InventoryDashboard = () => {
           animation: slideIn 0.3s ease-out forwards;
         }
       `}</style>
+      {/* Invoice Section */}
+      <Invoice />
       <Card>
           <CardHeader>
             <CardTitle>Actual vs Predicted Order Quantities for 2024</CardTitle>
