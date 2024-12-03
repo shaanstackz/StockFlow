@@ -38,8 +38,7 @@ const InventoryDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState([
-    { id: 1, name: 'Widget A', currentStock: 50, minStock: 10, reorderPoint: 20, supplier: 'Supplier X' },
-    { id: 2, name: 'Widget B', currentStock: 30, minStock: 5, reorderPoint: 10, supplier: 'Supplier Y' }
+
   ]);
   const [alerts, setAlerts] = useState([]);
   
@@ -89,7 +88,7 @@ const InventoryDashboard = () => {
     const labels = {
       critical: "Low Stock",
       warning: "Warning",
-      good: "In Stock"
+      good: "Available"
     };
 
     return <Badge className={`${variants[status]} px-2 py-1`}>{labels[status]}</Badge>;
@@ -183,8 +182,6 @@ const InventoryDashboard = () => {
         },
         body: JSON.stringify({
           ...newProduct,
-          currentStock: Number(newProduct.currentStock),
-          minStock: Number(newProduct.minStock),
           reorderPoint: Number(newProduct.reorderPoint)
         })
       });
@@ -194,8 +191,6 @@ const InventoryDashboard = () => {
       const newProductWithId = {
         id: products.length + 1, // Generate a local id if server doesn't provide one
         name: newProduct.name,
-        currentStock: Number(newProduct.currentStock),
-        minStock: Number(newProduct.minStock),
         reorderPoint: Number(newProduct.reorderPoint),
         supplier: newProduct.supplier
       };
@@ -205,8 +200,6 @@ const InventoryDashboard = () => {
       // Reset form
       setNewProduct({
         name: '',
-        currentStock: '',
-        minStock: '',
         reorderPoint: '',
         supplier: ''
       });
@@ -509,17 +502,14 @@ const InventoryDashboard = () => {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-200">
-                      <th className="p-4 text-left font-medium text-gray-600">Product</th>
-                      <th className="p-4 text-left font-medium text-gray-600">Stock Status</th>
-                      <th className="p-4 text-left font-medium text-gray-600">Current Stock</th>
+                      <th className="p-4 text-left font-medium text-gray-600">Vendor</th>
+                      <th className="p-4 text-left font-medium text-gray-600">Vendor Status</th>
                       <th className="p-4 text-left font-medium text-gray-600">Stock Trend</th>
-                      <th className="p-4 text-left font-medium text-gray-600">Supplier</th>
                       <th className="p-4 text-left font-medium text-gray-600">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {products.map((product) => {
-                      const stockStatus = getStockStatus(product.currentStock, product.minStock);
                       const isNearReorder = product.currentStock <= product.reorderPoint;
                       
                       return (
@@ -528,15 +518,6 @@ const InventoryDashboard = () => {
                             <div className="flex flex-col">
                               <span className="font-medium">{product.name}</span>
                               <span className="text-sm text-gray-500">ID: {product.id}</span>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            {getStockBadge(stockStatus)}
-                          </td>
-                          <td className="p-4">
-                            <div className="flex flex-col">
-                              <span className="font-medium">{product.currentStock}</span>
-                              <span className="text-sm text-gray-500">Min: {product.minStock}</span>
                             </div>
                           </td>
                           <td className="p-4">
@@ -591,38 +572,21 @@ const InventoryDashboard = () => {
         {/* Add New Product Section */}
         <Card className="col-span-2">
           <CardHeader>
-            <CardTitle>Add New Product</CardTitle>
+            <CardTitle>Add New Vendor</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleAddProduct} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
-                  placeholder="Product Name"
+                  placeholder="Vendor Name"
                   value={newProduct.name}
                   onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
-                />
-                <Input
-                  placeholder="Current Stock"
-                  type="number"
-                  value={newProduct.currentStock}
-                  onChange={(e) => setNewProduct({...newProduct, currentStock: e.target.value})}
-                />
-                <Input
-                  placeholder="Minimum Stock"
-                  type="number"
-                  value={newProduct.minStock}
-                  onChange={(e) => setNewProduct({...newProduct, minStock: e.target.value})}
                 />
                 <Input
                   placeholder="Reorder Point"
                   type="number"
                   value={newProduct.reorderPoint}
                   onChange={(e) => setNewProduct({...newProduct, reorderPoint: e.target.value})}
-                />
-                <Input
-                  placeholder="Supplier"
-                  value={newProduct.supplier}
-                  onChange={(e) => setNewProduct({...newProduct, supplier: e.target.value})}
                 />
                 <Button type="submit" className="bg-blue-500 hover:bg-blue-600" disabled={loading}>
                   Add Product
