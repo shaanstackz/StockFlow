@@ -28,6 +28,7 @@ import {
 } from 'recharts';
 import './InventoryDashboard.css';
 import Invoice from './Invoice';
+import TitleSection from './TitleSection.js';
 const InventoryDashboard = () => {
   const [summaryData, setSummaryData] = useState(null);
   const [chartData, setChartData] = useState([]);
@@ -214,31 +215,40 @@ const InventoryDashboard = () => {
       console.error('Error adding product:', err);
     }
   };
-
+  const gradientColors = {
+    blue: 'from-blue-600 to-blue-400',
+    purple: 'from-purple-600 to-purple-400',
+    green: 'from-emerald-600 to-emerald-400',
+    orange: 'from-orange-600 to-orange-400'
+  };
   const metrics = summaryData ? [
     {
       title: "Current Stock Level",
       value: summaryData.currentStock?.toLocaleString() || '0',
       trend: `${summaryData.stockChange?.toFixed(1) || '0'}%`,
-      Icon: Package
+      Icon: Package,
+      gradient: gradientColors.blue
     },
     {
       title: "Forecast Accuracy",
       value: `${summaryData.forecastAccuracy?.toFixed(1) || '0'}%`,
       trend: "+1.2%",
-      Icon: TrendingUp
+      Icon: TrendingUp,
+      gradient: gradientColors.purple
     },
     {
       title: "Active Orders",
       value: summaryData.activeOrders || 0,
       trend: "-3",
-      Icon: Truck
+      Icon: Truck,
+      graident: gradientColors.green
     },
     {
       title: "Alert Count",
       value: summaryData.alertCount || 0,
       trend: `${alerts.length > 3 ? '+' : ''}${alerts.length - 3}`,
-      Icon: Bell
+      Icon: Bell,
+      gradient: gradientColors.orange
     }
   ] : [];
 
@@ -254,28 +264,7 @@ const InventoryDashboard = () => {
   return (
     <div className="dashboard-container">
       {/* Title Section */}
-      <Card className="mb-8 border-0 shadow-none bg-white overflow-hidden">
-        <CardContent className="p-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center gap-6">
-              <div className="bg-blue-600 p-4 rounded-2xl rotate-3 transform hover:rotate-6 transition-transform duration-300">
-                <Package className="h-10 w-10 text-white" />
-              </div>
-              <div>
-                <h1 className="text-5xl md:text-6xl font-black tracking-tight text-gray-900 relative">
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 transition-all duration-300">
-                    StockFlow
-                  </span>
-                  <div className="absolute -bottom-1 left-0 w-1/3 h-1 bg-blue-600 rounded-full"></div>
-                </h1>
-                <p className="text-gray-500 text-lg mt-2 font-medium ml-1">
-                  Intelligent Inventory Management
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <TitleSection />
       {/* Alerts Section */}
       <div className="mb-6 space-y-4 max-w-md"> {/* Constrain width for notification look */}
         {alerts.map((alert) => (
@@ -399,24 +388,22 @@ const InventoryDashboard = () => {
       <div className="dashboard-grid">
         {/* Metrics Cards */}
         <Card className="metric-card">
-        <div className="metrics-grid">
-          {metrics.map((metric, index) => (
-            <Card key={index}>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">{metric.title}</p>
-                    <p className="text-2xl font-bold">{metric.value}</p>
-                    <p className={`text-sm ${metric.trend.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
-                      {metric.trend}
-                    </p>
-                  </div>
-                  <metric.Icon className="h-8 w-8 text-blue-500" />
-                </div>
-              </CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {metrics.map(({ title, value, trend, Icon, gradient }, idx) => (
+            <Card
+              key={idx}
+              className={`p-4 bg-gradient-to-r ${gradient} text-white rounded-lg shadow-lg flex flex-col items-center gap-3`}
+            >
+              <div className="p-3 bg-white/20 rounded-full">
+                <Icon className="h-8 w-8 text-white" />
+              </div>
+              <h2 className="text-lg font-bold">{title}</h2>
+              <p className="text-3xl font-black">{value}</p>
+              <span className="text-sm">{trend}</span>
             </Card>
           ))}
         </div>
+
         {/* Upload Section */}
       <div className="upload-container">
         <div
@@ -505,66 +492,52 @@ const InventoryDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="w-full overflow-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="p-4 text-left font-medium text-gray-600">Vendor</th>
-                      <th className="p-4 text-left font-medium text-gray-600">Vendor Status</th>
-                      <th className="p-4 text-left font-medium text-gray-600">Stock Trend</th>
-                      <th className="p-4 text-left font-medium text-gray-600">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {products.map((product) => {
-                      const stockStatus = getStockStatus(product.currentStock, product.minStock);
-                      const isNearReorder = product.currentStock <= product.reorderPoint;
-                      
-                      return (
-                        <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="p-4">
-                            <div className="flex flex-col">
-                              <span className="font-medium">{product.name}</span>
-                              <span className="text-sm text-gray-500">ID: {product.id}</span>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            {getStockBadge(stockStatus)}
-                          </td>
-                          <td className="p-4">
-                            <div className="flex flex-col">
-                              <span className="font-medium">{product.currentStock}</span>
-                              <span className="text-sm text-gray-500">Min: {product.minStock}</span>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex items-center gap-2">
-                              {product.currentStock > product.minStock * 1.5 ? (
-                                <TrendingUp className="h-4 w-4 text-green-500" />
-                              ) : (
-                                <TrendingDown className="h-4 w-4 text-red-500" />
-                              )}
-                              <span className="text-sm">
-                                {product.currentStock > product.minStock * 1.5 ? "Stable" : "Declining"}
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="p-4 text-left font-medium text-gray-600">Vendor</th>
+                    <th className="p-4 text-left font-medium text-gray-600">Vendor Status</th>
+                    <th className="p-4 text-left font-medium text-gray-600">Stock Trend</th>
+                    <th className="p-4 text-left font-medium text-gray-600">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {products.map((product) => {
+                    const stockStatus = getStockStatus(product.currentStock, product.minStock);
+                    const isNearReorder = product.currentStock <= product.reorderPoint;
+                    
+                    return (
+                      <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="p-4">
+                          <div className="flex flex-col">
+                            <span className="font-medium">{product.name}</span>
+                            <span className="text-sm text-gray-500">ID: {product.id}</span>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          {getStockBadge(stockStatus)}
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center gap-2">
+                            <GitGraph className={`h-5 w-5 ${product.currentStock > product.minStock * 1.5 ? 'text-green-500' : 'text-red-500'}`} />
+                            <span className="text-sm">
+                              {product.currentStock > product.minStock * 1.5 ? "Stable" : "Declining"}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            {isNearReorder && (
+                              <span className="text-sm text-amber-600 flex items-center gap-1">
+                                <AlertCircle className="h-4 w-4" />
+                                Reorder Soon
                               </span>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex flex-col">
-                              <span>{product.supplier}</span>
-                              {isNearReorder && (
-                                <span className="text-sm text-amber-600 flex items-center gap-1">
-                                  <AlertCircle className="h-4 w-4" />
-                                  Reorder Soon
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="p-4">
+                            )}
                             <Button 
                               variant={isNearReorder ? "destructive" : "secondary"}
                               onClick={() => handleReorder(product.id)}
                               disabled={loading}
-                              className="w-full"
+                              size="sm"
                             >
                               {loading ? (
                                 <RefreshCcw className="h-4 w-4 animate-spin" />
@@ -572,12 +545,13 @@ const InventoryDashboard = () => {
                                 "Reorder"
                               )}
                             </Button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
               </div>
             </CardContent>
           </Card>
