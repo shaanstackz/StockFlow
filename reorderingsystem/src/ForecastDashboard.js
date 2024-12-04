@@ -231,7 +231,7 @@ const InventoryDashboard = () => {
     },
     {
       title: "Forecast Accuracy",
-      value: `${summaryData.forecastAccuracy?.toFixed(1) || '0'}%`,
+      value: `${forecastData?.forecastAccuracy?.toFixed(1) || '0'}%`,
       trend: "+1.2%",
       Icon: TrendingUp,
       gradient: gradientColors.purple
@@ -245,7 +245,7 @@ const InventoryDashboard = () => {
     },
     {
       title: "Alert Count",
-      value: summaryData.alertCount || 0,
+      value: alerts.length,  // Use alerts.length directly instead of summaryData.alertCount
       trend: `${alerts.length > 3 ? '+' : ''}${alerts.length - 3}`,
       Icon: Bell,
       gradient: gradientColors.orange

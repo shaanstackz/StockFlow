@@ -17,6 +17,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.impute import SimpleImputer
 import requests
 import json
+import os
 
 app = FastAPI()
 
@@ -73,66 +74,35 @@ def prepare_data() -> pd.DataFrame:
     except Exception as e:
         print(f"Error preparing data: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error preparing data: {str(e)}")
+# Alert Model
 class Alert(BaseModel):
     id: int
     type: str
     title: str
     description: str
     timestamp: datetime
-
-@app.get("/api/inventory/check-alerts")
-async def check_alerts():
-    try:
-        # Load the CSV file
-        df = pd.read_csv("1111003.csv")
-        # Keep only required columns
-        df = df[['Order Qty', 'Posting Date']]
-        # Convert date and numeric columns
-        df['Posting Date'] = pd.to_datetime(df['Posting Date'])
-        # Handle Order Qty conversion
-        if df['Order Qty'].dtype == 'object':
-            df['Order Qty'] = df['Order Qty'].replace(',', '', regex=True).astype(float)
-        else:
-            df['Order Qty'] = df['Order Qty'].astype(float)
-        # Set sample date and calculate end date
-        sample_date = pd.to_datetime('2024-11-15')
-        end_date = sample_date + timedelta(days=14)
-        # Filter data
-        mask = (df['Posting Date'] <= end_date) & (df['Order Qty'] > 0)
-        filtered_data = df[mask]
-        # Calculate total
-        total_required = filtered_data['Order Qty'].sum()
-        alerts = []
-        # If there's a shortage, create alert and send Teams notification
-        if total_required > 0:
-            difference = total_required/200  # Convert to kg
-            # Create alert for frontend
-            alerts.append(Alert(
-                id=1,
-                type="critical",
-                title="🚨 Butter Shortage Alert",
-                description=f"Projected shortage of {difference:.2f} kg by {end_date.date()}",
-                timestamp=datetime.now()
-            ))
-            # Prepare Teams message
-            teams_message = (
-                f"🚨 Butter Breakdown Alert! 🚨\n"
-                f"We're about {difference:.2f} kg short of buttery bliss! 😱\n\n"
-                f"In just two weeks ({end_date.date()}), we'll be stuck spreading *regret* on our toast instead of butter 🧈. "
-                "The ovens are roaring (metaphorically—don't call the fire department 🔥), but our butter stash is toast! 😬\n\n"
-                "No butter means we'll be whipping up… *sandpaper croissants* 🥐, *cardboard cookies* 🍪, and *scones so dry "
-                "they double as hockey pucks*. 🏒 Not a good look for us.\n\n"
-                "Our production line might screech to a halt like someone stepping on a stick of butter barefoot. 🏭💥 "
-                "And the only thing worse than a butter-less bakery is… well, *nothing*. 😅\n\n"
-                "This message is brought to you by the urgent need for butter—because without it, we can't churn out the magic. 🧙‍♂️✨\n"
-                "Help us out before we become a butter-less bakery! 🧈😂"
-            )
-            # Send Teams notification
-            recipients = "example@example.com"  # Replace with actual recipients
-            send_teams_notification(recipients, teams_message)
-        return {"alerts": [alert.dict() for alert in alerts]}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+ 
+# State Manager
+class AlertStateManager:
+    def __init__(self, state_file='alert_state.json'):
+        self.state_file = state_file
+    def get_last_state(self):
+        if not os.path.exists(self.state_file):
+            return None
+        try:
+            with open(self.state_file, 'r') as f:
+                return json.load(f)
+        except:
+            return None
+    def save_state(self, data, sample_date, file_modified_time):
+        state = {
+            'last_alert_data': data,
+            'last_sample_date': sample_date.strftime('%Y-%m-%d'),
+            'last_file_modified': file_modified_time,
+            'last_check_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        with open(self.state_file, 'w') as f:
+            json.dump(state, f)
  
 def send_teams_notification(recipients, message):
     teams_link = "https://prod-165.westus.logic.azure.com:443/workflows/fcce9f80916c42cfa5a9cd2a1ea7d987/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=10goJEFWpK33j1flVpBezaGn0BzRcL-ozTXjhJoDKyM"
@@ -156,6 +126,88 @@ def send_teams_notification(recipients, message):
             print(response.text)
     except Exception as e:
         print(f"Error sending Teams notification: {str(e)}")
+ 
+@app.get("/api/inventory/check-alerts")
+async def check_alerts():
+    try:
+        file_path = "1111003.csv"
+        state_manager = AlertStateManager()
+        # Get file's last modified time
+        file_modified_time = os.path.getmtime(file_path)
+        # Get last state
+        last_state = state_manager.get_last_state()
+        # Set sample date
+        sample_date = pd.to_datetime('2024-11-15')
+        # Check if we need to process
+        should_process = True
+        if last_state:
+            same_file_time = last_state['last_file_modified'] == file_modified_time
+            same_sample_date = last_state['last_sample_date'] == sample_date.strftime('%Y-%m-%d')
+            if same_file_time and same_sample_date:
+                should_process = False
+                # Return cached alerts if they exist
+                if 'last_alert_data' in last_state:
+                    return {"alerts": [last_state['last_alert_data']]}
+ 
+        # Load the CSV file
+        df = pd.read_csv(file_path)
+        # Keep only required columns
+        df = df[['Order Qty', 'Posting Date']]
+        # Convert date and numeric columns
+        df['Posting Date'] = pd.to_datetime(df['Posting Date'])
+        # Handle Order Qty conversion
+        if df['Order Qty'].dtype == 'object':
+            df['Order Qty'] = df['Order Qty'].replace(',', '', regex=True).astype(float)
+        else:
+            df['Order Qty'] = df['Order Qty'].astype(float)
+        # Calculate end date
+        end_date = sample_date + timedelta(days=14)
+        # Filter data
+        mask = (df['Posting Date'] <= end_date) & (df['Order Qty'] > 0)
+        filtered_data = df[mask]
+        # Calculate total
+        total_required = filtered_data['Order Qty'].sum()
+        alerts = []
+        # If there's a shortage, create alert and send Teams notification
+        if total_required > 0:
+            difference = total_required/200  # Convert to kg
+            # Create alert data
+            alert_data = {
+                "id": 1,
+                "type": "critical",
+                "title": "🚨 Butter Shortage Alert",
+                "description": f"Projected shortage of {difference:.2f} kg by {end_date.date()}",
+                "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            }
+            # Only send Teams message if data changed
+            if not last_state or last_state['last_alert_data'] != alert_data:
+                teams_message = (
+                    f"🚨 Butter Breakdown Alert! 🚨\n"
+                    f"We're about {difference:.2f} kg short of buttery bliss! 😱\n\n"
+                    f"In just two weeks ({end_date.date()}), we'll be stuck spreading *regret* on our toast instead of butter 🧈. "
+                    "The ovens are roaring (metaphorically—don't call the fire department 🔥), but our butter stash is toast! 😬\n\n"
+                    "No butter means we'll be whipping up… *sandpaper croissants* 🥐, *cardboard cookies* 🍪, and *scones so dry "
+                    "they double as hockey pucks*. 🏒 Not a good look for us.\n\n"
+                    "Our production line might screech to a halt like someone stepping on a stick of butter barefoot. 🏭💥 "
+                    "And the only thing worse than a butter-less bakery is… well, *nothing*. 😅\n\n"
+                    "This message is brought to you by the urgent need for butter—because without it, we can't churn out the magic. 🧙‍♂️✨\n"
+                    "Help us out before we become a butter-less bakery! 🧈😂"
+                )
+                recipients = "example@example.com"  # Replace with actual recipients
+                send_teams_notification(recipients, teams_message)
+                # Save the new state
+                state_manager.save_state(alert_data, sample_date, file_modified_time)
+            # Create alert for frontend
+            alerts.append(Alert(
+                id=1,
+                type="critical",
+                title="🚨 Butter Shortage Alert",
+                description=f"Projected shortage of {difference:.2f} kg by {end_date.date()}",
+                timestamp=datetime.now()
+            ))
+        return {"alerts": [alert.dict() for alert in alerts]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 def create_features(df):
     df = df.copy()
     
