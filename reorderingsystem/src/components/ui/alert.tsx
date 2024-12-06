@@ -5,7 +5,7 @@ import { cn } from "../../lib/utils.ts"; // Make sure this utility function is a
 
 // Define variants for the Alert component
 const alertVariants = cva(
-  "relative w-full rounded-lg border px-4 py-3 text-sm [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground [&>svg~*]:pl-7",
+  "relative w-full rounded-lg border px-6 py-4 text-lg [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground [&>svg~*]:pl-7", // Increased padding and text size
   {
     variants: {
       variant: {
@@ -36,7 +36,7 @@ Alert.displayName = "Alert";
 // AlertTitle component
 const AlertTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
   ({ className, ...props }, ref) => (
-    <h5 ref={ref} className={cn("mb-1 font-medium leading-none tracking-tight", className)} {...props} />
+    <h5 ref={ref} className={cn("mb-2 font-semibold text-xl leading-none tracking-tight", className)} {...props} /> // Increased font size for larger graph titles
   )
 );
 AlertTitle.displayName = "AlertTitle";
@@ -44,7 +44,7 @@ AlertTitle.displayName = "AlertTitle";
 // AlertDescription component
 const AlertDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("text-sm [&_p]:leading-relaxed", className)} {...props} />
+    <div ref={ref} className={cn("text-lg [&_p]:leading-relaxed", className)} {...props} /> // Increased font size for larger graph descriptions
   )
 );
 AlertDescription.displayName = "AlertDescription";

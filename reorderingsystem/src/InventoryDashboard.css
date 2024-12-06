@@ -1,0 +1,114 @@
+.dashboard-container {
+    padding: 16px;
+    background-color: #f4fdf4; /* Light green background for the entire dashboard */
+  }
+  
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 3fr; /* Allocate more space for charts */
+    gap: 16px;
+  }
+  
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Making metric cards more square */
+    gap: 12px; /* Small gap between metric cards */
+  }
+  
+  .card {
+    width: 100%; /* Full available width */
+    height: 150px; /* Height to make it square */
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Space contents vertically */
+    align-items: center; /* Center content horizontally */
+    font-size: 1rem; /* Adjusted font size */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    background-color: #e3f9e5; /* Light green background for the card */
+    color: #2e8b57; /* Darker green for the text */
+  }
+  
+  .card .metric-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #2e8b57; /* Dark green for the titles */
+  }
+  
+  .card .metric-value {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #2c6d46; /* Slightly darker green for the metric values */
+  }
+  
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr; /* One column for the charts */
+    gap: 16px;
+  }
+  
+  .chart-container {
+    width: 100%;
+    height: 400px; /* Height of each chart */
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff; /* White background for chart container */
+    border: 2px solid #d0e9d7; /* Light green border around the chart */
+  }
+  
+  .chart-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #2e8b57; /* Dark green title for the chart */
+  }
+  
+  .upload-container {
+    margin-bottom: 16px; /* Space between the upload field and the rest of the dashboard */
+  }
+  
+  .upload-area {
+    border: 2px dashed #2e8b57; /* Green dashed border for the upload area */
+    padding: 20px;
+    text-align: center;
+    background-color: #f9faf6; /* Light background for the upload area */
+    border-radius: 8px;
+    font-size: 1rem;
+    color: #2e8b57;
+  }
+  
+  .upload-area p {
+    margin: 0;
+    padding: 0;
+  }
+  
+  .upload-area .browse-link {
+    color: #2e8b57;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  
+  .upload-area:hover {
+    background-color: #e1f7e1; /* Light hover effect */
+  }  
+
+  @media (min-width: 768px) {
+    .dashboard-grid {
+      grid-template-columns: 1fr 3fr; /* More room for charts on larger screens */
+    }
+  
+    .charts-grid {
+      grid-template-columns: 1fr; /* Keep charts stacked in one column */
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .card {
+      height: 160px; /* Slightly larger height on desktop */
+      padding: 20px; /* More padding on desktop */
+    }
+    .chart-container {
+      height: 450px; /* Slightly higher chart size for desktop */
+    }
+  }
+  
