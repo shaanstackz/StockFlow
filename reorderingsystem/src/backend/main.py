@@ -105,7 +105,7 @@ class AlertStateManager:
             json.dump(state, f)
  
 def send_teams_notification(recipients, message):
-    teams_link = "https://prod-165.westus.logic.azure.com:443/workflows/fcce9f80916c42cfa5a9cd2a1ea7d987/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=10goJEFWpK33j1flVpBezaGn0BzRcL-ozTXjhJoDKyM"
+    teams_link = ""
     payload = {
         "Recipients": recipients,
         "Message": message
