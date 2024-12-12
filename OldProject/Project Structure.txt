@@ -1,8 +1,0 @@
-project_structure/
-│
-├── main.py
-├── inventory_management.py
-├── demand_forecasting.py
-├── supplier_integration.py
-├── notification_system.py
-└── requirements.tx
